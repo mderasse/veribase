@@ -65,8 +65,6 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
 constexpr CAmount DEFAULT_PAY_TX_FEE = 0;
-//! -fallbackfee default
-static const CAmount DEFAULT_FALLBACK_FEE = 20000;
 //! -discardfee default
 static const CAmount DEFAULT_DISCARD_FEE = 10000;
 //! -mintxfee default
@@ -77,10 +75,6 @@ static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 static const bool DEFAULT_WALLET_REJECT_LONG_CHAINS = false;
 //! Default for -avoidpartialspends
 static const bool DEFAULT_AVOIDPARTIALSPENDS = false;
-//! -txconfirmtarget default
-static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 6;
-//! -walletrbf default
-static const bool DEFAULT_WALLET_RBF = false;
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 //! -maxtxfee default
@@ -97,8 +91,6 @@ class CCoinControl;
 class COutput;
 class CScript;
 class CWalletTx;
-struct FeeCalculation;
-enum class FeeEstimateMode;
 class ReserveDestination;
 
 /** (client) version numbers for particular wallet features */
@@ -1163,18 +1155,11 @@ public:
     bool ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    CFeeRate m_pay_tx_fee{DEFAULT_PAY_TX_FEE};
-    unsigned int m_confirm_target{DEFAULT_TX_CONFIRM_TARGET};
+    bool fEnforcePayTxFee = false;
+    CFeeRate m_pay_tx_fee;
     bool m_spend_zero_conf_change{DEFAULT_SPEND_ZEROCONF_CHANGE};
-    bool m_signal_rbf{DEFAULT_WALLET_RBF};
-    bool m_allow_fallback_fee{true}; //!< will be defined via chainparams
     CFeeRate m_min_fee{DEFAULT_TRANSACTION_MINFEE}; //!< Override with -mintxfee
-    /**
-     * If fee estimation does not have enough data to provide estimates, use this fee instead.
-     * Has no effect if not using fee estimation
-     * Override with -fallbackfee
-     */
-    CFeeRate m_fallback_fee{DEFAULT_FALLBACK_FEE};
+
     CFeeRate m_discard_rate{DEFAULT_DISCARD_FEE};
     OutputType m_default_address_type{DEFAULT_ADDRESS_TYPE};
     OutputType m_default_change_type{DEFAULT_CHANGE_TYPE};

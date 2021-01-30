@@ -18,7 +18,6 @@
 #include <flatfile.h>
 #include <hash.h>
 #include <index/txindex.h>
-#include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <pow.h>
@@ -59,6 +58,30 @@
 
 #define MICRO 0.000001
 #define MILLI 0.001
+
+/**
+ * Min Fees
+ */
+unsigned int GetMinTxFee(int nBlockHeight) {
+    if( nBlockHeight == 0)
+        nBlockHeight = ::ChainActive().Height() + 1;
+
+    if( nBlockHeight < Params().GetConsensus().VIP1Height)
+        return MIN_TX_FEE;
+    else
+        return VIP1_MIN_TX_FEE;
+}
+
+CFeeRate GetMinTxFeeRate(int nBlockHeight) {
+    return CFeeRate(GetMinTxFee(nBlockHeight));
+}
+
+CFeeRate GetMinRelayTxFeeRate() {
+    if( fEnforceMinRelayTxFee )
+        return minRelayTxFee;
+    else
+        return GetMinTxFeeRate();
+}
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIndex *pb) const {
     // First sort by most total work, ...
@@ -125,10 +148,9 @@ int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
 
-CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
+CFeeRate minRelayTxFee;
 
-CBlockPolicyEstimator feeEstimator;
-CTxMemPool mempool(&feeEstimator);
+CTxMemPool mempool;
 
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
@@ -328,18 +350,6 @@ static void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age)
         ::ChainstateActive().CoinsTip().Uncache(removed);
 }
 
-static bool IsCurrentForFeeEstimation() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    AssertLockHeld(cs_main);
-    if (::ChainstateActive().IsInitialBlockDownload())
-        return false;
-    if (::ChainActive().Tip()->GetBlockTime() < (GetTime() - MAX_FEE_ESTIMATION_TIP_AGE))
-        return false;
-    if (::ChainActive().Height() < pindexBestHeader->nHeight - 1)
-        return false;
-    return true;
-}
-
 /* Make mempool consistent after a reorg, by re-adding or recursively erasing
  * disconnected block transactions from the mempool, and also removing any
  * other transactions from the mempool that are no longer valid given the new
@@ -506,13 +516,13 @@ private:
     // Compare a package's feerate against minimum allowed.
     bool CheckFeeRate(size_t package_size, CAmount package_fee, CValidationState& state)
     {
-        CAmount mempoolRejectFee = m_pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(package_size);
+        CAmount mempoolRejectFee = m_pool.GetMinFee().GetFee(package_size);
         if (mempoolRejectFee > 0 && package_fee < mempoolRejectFee) {
             return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
         }
 
-        if (package_fee < ::minRelayTxFee.GetFee(package_size)) {
-            return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INSUFFICIENTFEE, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetFee(package_size)));
+        if (package_fee < GetMinRelayTxFeeRate().GetFee(package_size, true)) {
+            return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INSUFFICIENTFEE, "min relay fee not met", strprintf("%d < %d", package_fee, GetMinRelayTxFeeRate().GetFee(package_size, true)));
         }
         return true;
     }
@@ -840,7 +850,6 @@ bool MemPoolAccept::ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, Precomp
 
 bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
 {
-    const CTransaction& tx = *ws.m_ptx;
     const uint256& hash = ws.m_hash;
     CValidationState &state = args.m_state;
     const bool bypass_limits = args.m_bypass_limits;
@@ -850,7 +859,6 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     const CAmount& nModifiedFees = ws.m_modified_fees;
     const CAmount& nConflictingFees = ws.m_conflicting_fees;
     const size_t& nConflictingSize = ws.m_conflicting_size;
-    const bool fReplacementTransaction = ws.m_replacement_transaction;
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
 
     // Remove conflicting transactions from the mempool
@@ -866,15 +874,8 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     }
     m_pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
 
-    // This transaction should only count for fee estimation if:
-    // - it isn't a BIP 125 replacement transaction (may not be widely supported)
-    // - it's not being re-added during a reorg which bypasses typical mempool fee limits
-    // - the node is not behind
-    // - the transaction is not dependent on any other transactions in the mempool
-    bool validForFeeEstimation = !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation() && m_pool.HasNoInputsOf(tx);
-
     // Store transaction in memory
-    m_pool.addUnchecked(*entry, setAncestors, validForFeeEstimation);
+    m_pool.addUnchecked(*entry, setAncestors);
 
     // trim mempool and check if tx was trimmed
     if (!bypass_limits) {

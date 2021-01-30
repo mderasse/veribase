@@ -9,7 +9,6 @@
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <policy/feerate.h>
-#include <policy/fees.h>
 #include <primitives/transaction.h>
 #include <script/standard.h>
 #include <support/allocators/secure.h>
@@ -439,14 +438,8 @@ public:
         int* returned_target,
         FeeReason* reason) override
     {
-        FeeCalculation fee_calc;
-        CAmount result;
-        result = GetMinimumFee(*m_wallet, tx_bytes, coin_control, &fee_calc);
-        if (returned_target) *returned_target = fee_calc.returnedTarget;
-        if (reason) *reason = fee_calc.reason;
-        return result;
+        return GetMinimumFee(*m_wallet, tx_bytes, coin_control);
     }
-    unsigned int getConfirmTarget() override { return m_wallet->m_confirm_target; }
     bool hdEnabled() override { return m_wallet->IsHDEnabled(); }
     bool canGetAddresses() override { return m_wallet->CanGetAddresses(); }
     bool IsWalletFlagSet(uint64_t flag) override { return m_wallet->IsWalletFlagSet(flag); }

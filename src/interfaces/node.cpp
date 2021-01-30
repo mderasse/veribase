@@ -18,7 +18,6 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <policy/feerate.h>
-#include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <primitives/block.h>
@@ -210,15 +209,6 @@ public:
         }
     }
     bool getNetworkActive() override { return g_connman && g_connman->GetNetworkActive(); }
-    CFeeRate estimateSmartFee(int num_blocks, bool conservative, int* returned_target = nullptr) override
-    {
-        FeeCalculation fee_calc;
-        CFeeRate result = ::feeEstimator.estimateSmartFee(num_blocks, &fee_calc, conservative);
-        if (returned_target) {
-            *returned_target = fee_calc.returnedTarget;
-        }
-        return result;
-    }
     CFeeRate getDustRelayFee() override { return ::dustRelayFee; }
     UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) override
     {
