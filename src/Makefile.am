@@ -164,7 +164,6 @@ BITCOIN_CORE_H = \
   outputtype.h \
   policy/feerate.h \
   policy/policy.h \
-  policy/rbf.h \
   policy/settings.h \
   pow.h \
   protocol.h \
@@ -209,7 +208,6 @@ BITCOIN_CORE_H = \
   util/system.h \
   util/memory.h \
   util/moneystr.h \
-  util/rbf.h \
   util/string.h \
   util/threadnames.h \
   util/time.h \
@@ -222,7 +220,6 @@ BITCOIN_CORE_H = \
   wallet/coincontrol.h \
   wallet/crypter.h \
   wallet/db.h \
-  wallet/feebumper.h \
   wallet/fees.h \
   wallet/ismine.h \
   wallet/load.h \
@@ -279,7 +276,6 @@ libbitcoin_server_a_SOURCES = \
   node/psbt.cpp \
   node/transaction.cpp \
   noui.cpp \
-  policy/rbf.cpp \
   policy/settings.cpp \
   pow.cpp \
   rest.cpp \
@@ -327,7 +323,6 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/coincontrol.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
-  wallet/feebumper.cpp \
   wallet/fees.cpp \
   wallet/ismine.cpp \
   wallet/load.cpp \
@@ -504,7 +499,6 @@ libbitcoin_util_a_SOURCES = \
   util/error.cpp \
   util/system.cpp \
   util/moneystr.cpp \
-  util/rbf.cpp \
   util/threadnames.cpp \
   util/strencodings.cpp \
   util/string.cpp \

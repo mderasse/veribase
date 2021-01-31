@@ -30,8 +30,6 @@ public:
     bool fOverrideFeeRate;
     //! Override the wallet's m_pay_tx_fee if set
     boost::optional<CFeeRate> m_feerate;
-    //! Override the wallet's m_signal_rbf if set
-    boost::optional<bool> m_signal_bip125_rbf;
     //! Avoid partial use of funds sent to a given address
     bool m_avoid_partial_spends;
     //! Forbids inclusion of dirty (previously used) addresses
