@@ -84,12 +84,6 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
         assert(block != nullptr);
         return block->GetMedianTimePast();
     }
-    bool haveBlockOnDisk(int height) override
-    {
-        LockAssertion lock(::cs_main);
-        CBlockIndex* block = ::ChainActive()[height];
-        return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
-    }
     Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) override
     {
         LockAssertion lock(::cs_main);
@@ -97,20 +91,6 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
         if (block) {
             if (hash) *hash = block->GetBlockHash();
             return block->nHeight;
-        }
-        return nullopt;
-    }
-    Optional<int> findPruned(int start_height, Optional<int> stop_height) override
-    {
-        LockAssertion lock(::cs_main);
-        if (::fPruneMode) {
-            CBlockIndex* block = stop_height ? ::ChainActive()[*stop_height] : ::ChainActive().Tip();
-            while (block && block->nHeight >= start_height) {
-                if ((block->nStatus & BLOCK_HAVE_DATA) == 0) {
-                    return block->nHeight;
-                }
-                block = block->pprev;
-            }
         }
         return nullopt;
     }
@@ -312,11 +292,6 @@ public:
     CFeeRate relayMinFee() override { return GetMinRelayTxFeeRate(); }
     CFeeRate getMinTxFeeRate() override { return GetMinTxFeeRate(); }
     CFeeRate relayDustFee() override { return ::dustRelayFee; }
-    bool havePruned() override
-    {
-        LOCK(cs_main);
-        return ::fHavePruned;
-    }
     bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !isInitialBlockDownload(); }
     bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
