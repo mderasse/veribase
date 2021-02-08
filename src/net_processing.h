@@ -8,15 +8,16 @@
 
 #include <net.h>
 #include <validationinterface.h>
+#include <consensus/consensus.h>
 #include <consensus/params.h>
 #include <sync.h>
 
 extern CCriticalSection cs_main;
 
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
-static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
+static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SERIALIZED_SIZE/2;
 /** Default number of orphan txn to keep around for block reconstruction */
-static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
+static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = MAX_BLOCK_SERIALIZED_SIZE/2;
 /** Default for BIP61 (sending reject messages) */
 static constexpr bool DEFAULT_ENABLE_BIP61{false};
 static const bool DEFAULT_PEERBLOOMFILTERS = false;

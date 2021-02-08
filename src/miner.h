@@ -20,6 +20,7 @@
 class CBlockIndex;
 class CChainParams;
 class CScript;
+class CWallet;
 
 namespace Consensus { struct Params; };
 
@@ -134,7 +135,6 @@ private:
     // Configuration parameters for the block size
     bool fIncludeWitness;
     unsigned int nBlockMaxWeight;
-    CFeeRate blockMinFeeRate;
 
     // Information on the current status of the block
     uint64_t nBlockWeight;
@@ -152,7 +152,6 @@ public:
     struct Options {
         Options();
         size_t nBlockMaxWeight;
-        CFeeRate blockMinFeeRate;
     };
 
     explicit BlockAssembler(const CChainParams& params);
@@ -201,5 +200,22 @@ private:
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+
+/** Base sha256 mining transform */
+void SHA256Transform(void* pstate, void* pinput, const void* pinit);
+
+void GenerateVerium(bool fGenerate, CWallet* pwallet, int nThreads, CConnman* connman);
+
+void Miner(CWallet *pwallet, CConnman* connman);
+
+void updateHashrate(double nHashrate);
+
+extern double hashrate;
+
+namespace boost {
+    class thread_group;
+} // namespace boost
+
+void MintStake(boost::thread_group& threadGroup, std::shared_ptr<CWallet> pwallet, CConnman* connman, CTxMemPool* mempool);
 
 #endif // BITCOIN_MINER_H

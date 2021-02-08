@@ -16,9 +16,8 @@ class CBaseChainParams
 {
 public:
     /** BIP70 chain name strings (main, test or regtest) */
-    static const std::string MAIN;
-    static const std::string TESTNET;
-    static const std::string REGTEST;
+    static const std::string VERICOIN;
+    static const std::string VERIUM;
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }

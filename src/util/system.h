@@ -307,7 +307,7 @@ public:
 
     /**
      * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
-     * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
+     * @return CBaseChainParams::VERICOIN or VERIUM by default; raises runtime error if an invalid combination is given.
      */
     std::string GetChainName() const;
 
