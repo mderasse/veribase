@@ -7,6 +7,7 @@
 #define BITCOIN_POW_H
 
 #include <amount.h>
+#include <chainparams.h>
 #include <consensus/params.h>
 
 #include <stdint.h>
@@ -22,7 +23,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const Consensus:
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
 
 /** Get reward amount for a solved work **/
-CAmount GetProofOfWorkReward(int64_t nFees,const CBlockIndex* pindex);
+CAmount GetProofOfWorkReward(int64_t nFees,const CBlockIndex* pindex, const CChainParams& chainparams);
 
 /** Get block time **/
 unsigned int CalculateBlocktime(const CBlockIndex *pindex);

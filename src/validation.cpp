@@ -1689,7 +1689,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
-    if (block.GetHash() == chainparams.GetConsensus().hashGenesisBlock) {
+        if (block.GetHash() == chainparams.GetConsensus().hashGenesisBlock) {
         if (!fJustCheck)
             view.SetBestBlock(pindex->GetBlockHash());
         return true;
@@ -2951,7 +2951,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // Check transactions
     // Must check for duplicate inputs (see CVE-2018-17144)
     for (const auto& tx : block.vtx) {
-        if (!CheckTransaction(*tx, state, true)) 
+        if (!CheckTransaction(*tx, state, true))
             return state.Invalid(state.GetReason(), false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 
@@ -3045,7 +3045,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, "out-of-pow-height", strprintf("reject proof of work after %s", consensusParams.PoSHeight));
 
     // Check proof of work or proof-of-stake
-    if (block.nBits != GetNextTargetOrWorkRequired(pindexPrev, params))
+    if ( block.nBits != GetNextTargetOrWorkRequired(pindexPrev, (nHeight >= consensusParams.PoSHeight), params))
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, "bad-diffbits", "incorrect proof of work/stake");
 
     // Check against checkpoints
@@ -3116,7 +3116,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness reserved value). In case there are
     //   multiple, the last one is used.
     bool fHaveWitness = false;
- 
+
     // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room for spam
     if (!fHaveWitness) {
       for (const auto& tx : block.vtx) {
@@ -3894,7 +3894,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
             // Make sure nothing changed from under us (this won't happen because RewindBlockIndex runs before importing/network are active)
             assert(tip == m_chain.Tip());
             if (tip == nullptr || tip->nHeight < nHeight) break;
-      
+
             // Disconnect block
             if (!DisconnectTip(state, params, nullptr)) {
                 return error("RewindBlockIndex: unable to disconnect block at height %i (%s)", tip->nHeight, FormatStateMessage(state));
@@ -4477,10 +4477,10 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
 }
 
 // Split PoS and PoW work in to
-unsigned int GetNextTargetOrWorkRequired(const CBlockIndex* pindexLast, const CChainParams& params)
+unsigned int GetNextTargetOrWorkRequired(const CBlockIndex* pindexLast, bool fProofOfStake, const CChainParams& params)
 {
     if (params.IsVericoin())
-        return GetNextTargetRequired(pindexLast, params.GetConsensus());
+        return GetNextTargetRequired(pindexLast, fProofOfStake, params.GetConsensus());
     else
         return GetNextWorkRequired(pindexLast, params.GetConsensus());
 }

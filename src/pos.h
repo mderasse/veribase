@@ -21,7 +21,7 @@ class CCoinsViewCache;
 class uint256;
 
 /** Get next required staking work **/
-unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, const Consensus::Params& params);
+unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& params);
 
 double GetPoSKernelPS(CBlockIndex* pindexPrev, const Consensus::Params& params);
 double GetPoSKernelPS(CBlockIndex* pindexPrev);

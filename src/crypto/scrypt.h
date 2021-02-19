@@ -9,9 +9,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-
+#if CLIENT_IS_VERIUM
 static const int SCRYPT_SCRATCHPAD_SIZE = 134218239;
 static const int N = 1048576;
+#else
+static const int SCRYPT_SCRATCHPAD_SIZE = 131135;
+static const int N = 1024;
+#endif
 
 int scrypt_best_throughput();
 

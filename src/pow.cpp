@@ -71,28 +71,41 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 }
 
 // Get reward amount for a solved work
-int64_t GetProofOfWorkReward(int64_t nFees,const CBlockIndex* pindex)
+int64_t GetProofOfWorkReward(int64_t nFees,const CBlockIndex* pindex, const CChainParams& chainparams)
 {
     int64_t nReward;
 
-    unsigned int nBlockTime = CalculateBlocktime(pindex);
-
-    int height = pindex->nHeight+1;
-    if (height == 1)
+    if( chainparams.IsVericoin() )
     {
-        nReward = 564705 * COIN; // Verium purchased in presale ICO
-    }
-    else if ((pindex->nMoneySupply/COIN) > 2899999)
-    {
-        double dReward = 0.04*exp(0.0116*nBlockTime); // Reward schedule after 10x VRC supply parity
-        nReward = dReward * COIN;
+        if (chainparams.IsTestChain())
+        {
+            nReward = 100000 * COIN;
+        }
+        else
+        {
+            nReward = 2500 * COIN;
+        }
     }
     else
     {
-        double dReward = 0.25*exp(0.0116*nBlockTime); // Reward schedule up to 10x VRC supply parity
-        nReward = dReward * COIN;
-    }
+        unsigned int nBlockTime = CalculateBlocktime(pindex);
 
+        int height = pindex->nHeight+1;
+        if (height == 1)
+        {
+            nReward = 564705 * COIN; // Verium purchased in presale ICO
+        }
+        else if ((pindex->nMoneySupply/COIN) > 2899999)
+        {
+            double dReward = 0.04*exp(0.0116*nBlockTime); // Reward schedule after 10x VRC supply parity
+            nReward = dReward * COIN;
+        }
+        else
+        {
+            double dReward = 0.25*exp(0.0116*nBlockTime); // Reward schedule up to 10x VRC supply parity
+            nReward = dReward * COIN;
+        }
+    }
     return nReward + nFees;
 }
 

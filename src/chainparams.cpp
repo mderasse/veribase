@@ -8,6 +8,7 @@
 #include <bignum.h>
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
+#include <streams.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
@@ -32,10 +33,8 @@ static CBlock CreateGenesisBlock(std::string chainName, const char* pszTimestamp
     }
     else
     {
-        // XXX: TO Triple Check.
         txNew.vin[0].scriptSig = CScript() << 0 << CScriptNum(42) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue = genesisReward;
-        txNew.vout[0].scriptPubKey = genesisOutputScript;
+        txNew.vout[0].SetEmpty();
     }
 
     CBlock genesis;
@@ -110,9 +109,10 @@ public:
         m_assumed_chain_state_size = 10;
 
         genesis = CreateGenesisBlock(strNetworkID, 1399690945, 612416, consensus.powLimit.GetCompact(), 1, 2500 * COIN);
-        consensus.hashGenesisBlock = genesis.GetHash();
+        consensus.hashGenesisBlock = genesis.GetWorkHash();
 
         assert(consensus.hashGenesisBlock == uint256S("0x000004da58a02be894a6c916d349fe23cc29e21972cafb86b5d3f07c4b8e6bb8"));
+        assert(genesis.hashMerkleRoot == uint256S("0x60424046d38de827de0ed1a20a351aa7f3557e3e1d3df6bfb34a94bc6161ec68"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -194,7 +194,7 @@ public:
         m_assumed_chain_state_size = 4;
 
         genesis = CreateGenesisBlock(strNetworkID, 1472669240, 233180, consensus.powLimit.GetCompact(), 1, 2500 * COIN);
-        consensus.hashGenesisBlock = genesis.GetHash();
+        consensus.hashGenesisBlock = genesis.GetVeriumHash();
         assert(consensus.hashGenesisBlock == uint256S("0x8232c0cf3bd7e05546e3d7aaaaf89fed8bc97c4df1a8c95e9249e13a2734932b"));
         assert(genesis.hashMerkleRoot == uint256S("0x925e430072a1f39b530fc79db162e29433ab0ea266a99c8cab4f03001dc9faa9"));
 

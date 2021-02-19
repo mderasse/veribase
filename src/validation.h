@@ -91,7 +91,11 @@ static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
 static const unsigned int BLOCK_STALLING_TIMEOUT = 2;
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
+#if CLIENT_IS_VERIUM
 static const unsigned int MAX_HEADERS_RESULTS = 8000;
+#else
+static const unsigned int MAX_HEADERS_RESULTS = 100000;
+#endif
 /** Maximum depth of blocks we're willing to serve as compact blocks to peers
  *  when requested. For older blocks, a regular BLOCK response will be sent. */
 static const int MAX_CMPCTBLOCK_DEPTH = 5;
@@ -710,7 +714,7 @@ private:
     void EraseBlockData(CBlockIndex* index) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
-unsigned int GetNextTargetOrWorkRequired(const CBlockIndex* pindexLast, const CChainParams& params);
+unsigned int GetNextTargetOrWorkRequired(const CBlockIndex* pindexLast, bool fProofOfStake, const CChainParams& params);
 
 /** Mark a block as precious and reorganize.
  *

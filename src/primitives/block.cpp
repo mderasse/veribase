@@ -10,7 +10,18 @@
 #include <tinyformat.h>
 #include <crypto/common.h>
 
+
+
 uint256 CBlockHeader::GetHash() const
+{
+#if CLIENT_IS_VERIUM
+    return this->GetVeriumHash();
+#else
+    return this->GetWorkHash();
+#endif
+}
+
+uint256 CBlockHeader::GetVeriumHash() const
 {
     return SerializeHash(*this);
 }
