@@ -25,6 +25,7 @@ struct TxInUndoFormatter
     template<typename Stream>
     void Ser(Stream &s, const Coin& txout) {
         ::Serialize(s, VARINT(txout.nHeight * uint32_t{2} + txout.fCoinBase ));
+        ::Serialize(s, VARINT(txout.nTime));
         if (txout.nHeight > 0) {
             // Required to maintain compatibility with older undo format.
             ::Serialize(s, (unsigned char)0);
@@ -38,6 +39,7 @@ struct TxInUndoFormatter
         ::Unserialize(s, VARINT(nCode));
         txout.nHeight = nCode >> 1;
         txout.fCoinBase = nCode & 1;
+        ::Unserialize(s, VARINT(txout.nTime));
         if (txout.nHeight > 0) {
             // Old versions stored the version number for the last spend of
             // a transaction's outputs. Non-final spends were indicated with

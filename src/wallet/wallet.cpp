@@ -6,6 +6,7 @@
 #include <wallet/wallet.h>
 
 #include <chain.h>
+#include <chainparams.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <fs.h>
@@ -2430,7 +2431,7 @@ bool CWallet::SignTransaction(CMutableTransaction& tx) const
             return false;
         }
         const CWalletTx& wtx = mi->second;
-        coins[input.prevout] = Coin(wtx.tx->vout[input.prevout.n], wtx.m_confirm.block_height, wtx.IsCoinBase());
+        coins[input.prevout] = Coin(wtx.tx->vout[input.prevout.n], wtx.m_confirm.block_height, wtx.IsCoinBase(), wtx.nTimeSmart);
     }
     std::map<int, std::string> input_errors;
     return SignTransaction(tx, coins, SIGHASH_ALL, input_errors);
@@ -4090,7 +4091,7 @@ int CWalletTx::GetBlocksToMaturity() const
         return 0;
     int chain_depth = GetDepthInMainChain();
     assert(chain_depth >= 0); // coinbase tx should not be conflicted
-    return std::max(0, (COINBASE_MATURITY+1) - chain_depth);
+    return std::max(0, (Params().GetConsensus().nMaturity+1) - chain_depth);
 }
 
 bool CWalletTx::IsImmatureCoinBase() const

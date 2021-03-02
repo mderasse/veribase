@@ -39,21 +39,31 @@ public:
     //! at which height this containing transaction was included in the active block chain
     uint32_t nHeight : 31;
 
+    // peercoin: transaction timestamp
+    unsigned int nTime;
+
     //! construct a Coin from a CTxOut and height/coinbase information.
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn, int nTimeIn) :
+        out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nTime(nTimeIn) {}
+    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn, int nTimeIn) :
+        out(outIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nTime(nTimeIn) {}
 
     void Clear() {
         out.SetNull();
         fCoinBase = false;
         nHeight = 0;
+        nTime = 0;
     }
 
     //! empty constructor
-    Coin() : fCoinBase(false), nHeight(0) { }
+    Coin() : fCoinBase(false), nHeight(0), nTime(0) { }
 
     bool IsCoinBase() const {
         return fCoinBase;
+    }
+
+    bool IsCoinStake() const { // ppcoin: coinstake
+        return false;
     }
 
     template<typename Stream>
@@ -62,6 +72,8 @@ public:
         uint32_t code = nHeight * uint32_t{2} + fCoinBase;
         ::Serialize(s, VARINT(code));
         ::Serialize(s, Using<TxOutCompression>(out));
+        // ppcoin transaction timestamp
+        ::Serialize(s, VARINT(nTime));
     }
 
     template<typename Stream>
@@ -71,6 +83,8 @@ public:
         nHeight = code >> 1;
         fCoinBase = code & 1;
         ::Unserialize(s, Using<TxOutCompression>(out));
+        // ppcoin transaction timestamp
+        ::Unserialize(s, VARINT(nTime));
     }
 
     bool IsSpent() const {
@@ -116,7 +130,7 @@ struct CCoinsCacheEntry
 
     enum Flags {
         DIRTY = (1 << 0), // This cache entry is potentially different from the version in the parent view.
-        FRESH = (1 << 1), // The parent view does not have this entry.
+        FRESH = (1 << 1), // The parent view does not have this entry (or it is pruned).
         /* Note that FRESH is a performance optimization with which we can
          * erase coins that are fully spent if we know we do not need to
          * flush the changes to the parent cache.  It is always safe to
